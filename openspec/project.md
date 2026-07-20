@@ -6,6 +6,32 @@
 > (importing the operator's Claude Code agents/skills) will land as a separate OpenSpec
 > change once the agent set is scoped.
 
+## 0. Capability specs
+
+This overview is backed by 16 detailed capability specs under `openspec/specs/` (each with
+`SHALL` requirements + `WHEN`/`THEN` scenarios, cited to `file:line`):
+
+| Capability | Covers |
+|---|---|
+| [`agent-runtime`](specs/agent-runtime/spec.md) | session turn loop, prompt assembly, streaming, compaction, doom-loop |
+| [`provider-model`](specs/provider-model/spec.md) | 150+ providers via models.dev, auth loaders, `provider/model` resolution, gateway |
+| [`tool-system`](specs/tool-system/spec.md) | `Tool.define` contract, built-in tool catalog, custom/plugin discovery, truncation |
+| [`permission-scope`](specs/permission-scope/spec.md) | `PermissionNext` least-privilege, `activeTools` filtering, scope/lane discipline |
+| [`skill-system`](specs/skill-system/spec.md) | loader dirs, frontmatter, kill-chain, progressive disclosure, Ed25519 signing tiers |
+| [`agent-roster`](specs/agent-roster/spec.md) | native agents + specialists + proxy swarm, native-vs-config/markdown merge |
+| [`methodology-engine`](specs/methodology-engine/spec.md) | WSTG phases, coverage, VRT, chain detection (hardcoded TS) |
+| [`web-proxy-pipeline`](specs/web-proxy-pipeline/spec.md) | hackbrowser crawl → ingest → proxy-agent → analyzer/testers |
+| [`post-exploitation`](specs/post-exploitation/spec.md) | post-exploit skill categories + loading/gating (capability inventory) |
+| [`vulnerability-reporting`](specs/vulnerability-reporting/spec.md) | `report_vulnerability`, findings store, VRT scoping/dedup |
+| [`mcp-and-bolt`](specs/mcp-and-bolt/spec.md) | MCP config/loading, lazy tool registry, Bolt remote tool execution |
+| [`config-extension`](specs/config-extension/spec.md) | config precedence, directory discovery, extend-without-forking |
+| [`server-remote-access`](specs/server-remote-access/spec.md) | Hono server, SSE, auth topology, SPA serving, remote/tunnel |
+| [`session-storage-sharing`](specs/session-storage-sharing/spec.md) | SQLite/Drizzle store, snapshots, ShareNext → enterprise viewer |
+| [`interfaces`](specs/interfaces/spec.md) | CLI command surface, TUI (opentui), ACP, Slack |
+| [`deployment-selfhost`](specs/deployment-selfhost/spec.md) | SST tiers, distribution/signing, minimal-vs-full self-host |
+
+Sections 1–7 below are the narrative overview.
+
 ## 1. What it is
 
 CyberStrike bills itself as **"the first open-source AI agent built for offensive security"** —
