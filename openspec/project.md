@@ -104,7 +104,10 @@ the LLM; knowledge lives on disk as version-controlled, Ed25519-signable markdow
 
 **Honest sizing:** "7,600+ skills" is ~98% auto-generated framework enumeration (CIS ~5,000, NIST ~1,600,
 MITRE ATT&CK ~900). The hand-authored red-team core is ~30 `attack-*`/post-exploit skills + 125 OWASP
-WSTG cases (the "120+ OWASP" claim). "13 agents" = 5 named + 8 proxy testers.
+WSTG cases (the "120+ OWASP" claim). "13 agents" = the 5 named + 8 proxy testers *pentest-facing* subset;
+the full native roster defined in `agent.ts` is **21** (adds 6 utility/plumbing agents — general, explore,
+compaction, title, summary, normalize-request — plus `proxy-agent` and `proxy-analyzer`). See the
+[`agent-roster`](specs/agent-roster/spec.md) spec.
 
 ## 4. Extension model — extend WITHOUT forking
 
@@ -194,7 +197,7 @@ Three independently-gated tiers (`sst.config.ts` conditional imports):
 **Replace `cybrstk.us`:** single knob — `ShareNext.url()` (`src/share/share-next.ts:16`) =
 `config.enterprise?.url ?? "https://cybrstk.us"`. Set config `"enterprise": { "url": "https://share.mycorp" }`
 (supports `{env:VAR}`). There is no `share.url`/`CYBERSTRIKE_SHARE_URL`. Kill sharing entirely with
-`CYBERSTRIKE_DISABLE_SHARE=1`. A self-hosted server implements `POST /api/share`,
+`CYBERSTRIKE_DISABLE_SHARE=1` (or config `"share": "disabled"`). A self-hosted server implements `POST /api/share`,
 `POST /api/share/:id/sync`, `GET /api/share/:id/data`, `DELETE /api/share/:id`, + a `GET /share/:id` viewer.
 
 **Security caveats (matter for a pentest tool):**

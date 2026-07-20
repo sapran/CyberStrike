@@ -48,7 +48,7 @@ The system SHALL re-check every executing tool call by resolving each requested 
 
 #### Scenario: Deny halts the call
 - **WHEN** a resolved pattern evaluates to `deny` during `PermissionNext.ask`
-- **THEN** it throws `DeniedError` carrying only the matching deny rules (next.ts:142-143,277-291), which propagates back as a tool error and halts that call
+- **THEN** it throws `DeniedError` carrying every rule matching that permission name (its human-readable message narrows to the deny rules) (next.ts:142-143,283-284), which propagates back as a tool error and halts that call
 
 #### Scenario: Ask suspends for approval
 - **WHEN** a resolved pattern evaluates to `ask`
@@ -142,7 +142,7 @@ The system SHALL structurally confine proxy-tester sub-agents to their own vulne
 - Precedence = merge order, resolved by `findLast` (last wins). Agent ruleset order is: defaults -> agent allow/deny list -> user config. The injection denylist is merged AFTER user (agent.ts:593-627), which is why the code comment 'user overrides cannot loosen these denies' holds — for the USER ruleset. Note ctx.ask merges session.permission AFTER agent.permission (prompt.ts:960), so a session-level rule would win over even the injection denies; in practice session.permission is set only by the task tool to a fixed small set (task.ts:110-135) and is not user-loosenable for bash, so the denylist holds.
 - Default-safe posture: `evaluate` returns `ask` (not allow) when no rule matches (next.ts:243), and the global default `question:"deny"` blocks the interactive question tool for sub-agents (cyberstrike primary re-allows it, agent.ts:186-188).
 - `always` approvals are in-memory only — the disk persistence is explicitly commented out pending management UI (next.ts:228-231), so granted allowances reset each session. Not a durable allowlist.
-- Lane discipline has two enforcement styles: STRUCTURAL/blocking for update_vrt_check (rejects, vrt-check.ts:45-52) and task dispatch (bounces, task.ts:74-83); but report_vulnerability RECORDS the off-lane finding and only appends a NOTE (vulnerability.ts:82-86) — it does not block. scope_check (scope-check.ts) is purely advisory (text WARNING, no block).
+- Lane discipline has two enforcement styles: STRUCTURAL/blocking for update_vrt_check (rejects, vrt-check.ts:45-52) and task dispatch (bounces, task.ts:74-83); but report_vulnerability RECORDS the off-lane finding and only appends a NOTE (tool/vulnerability.ts:82-88) — it does not block. scope_check (scope-check.ts) is purely advisory (text WARNING, no block).
 - Provenance: the PermissionNext primitives (Rule/Ruleset/evaluate/ask/reply/disabled), Tool.Context.ask, and llm.ts activeTools filtering are opencode-lineage (upstream sst/opencode ships an equivalent permission namespace). The security-specific hardening is CyberStrike's: the full sub-agent roster and their `*:deny` allowlists, the injection-tester bash denylist, the vuln-scope lane discipline, scope_check, and the methodology/VRT tools. doom_loop is wired as a first-class permission key in this fork (config.ts:729, processor.ts).
 - No inflated README numbers were relied on — every claim here is grounded in source. Concrete constants verified: DOOM_LOOP_THRESHOLD=3 (processor.ts:21); proxy-tester default step cap=50 (agent.ts:777-778); EDIT_TOOLS = edit/write/patch/multiedit (next.ts:248).
 

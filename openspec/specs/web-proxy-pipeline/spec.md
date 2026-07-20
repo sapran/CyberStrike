@@ -18,7 +18,7 @@ The system SHALL drive a Playwright/Chromium browser through an LLM-guided BFS c
 
 #### Scenario: DOM/accessibility scan feeds navigation
 - **WHEN** a page is loaded
-- **THEN** scanner.ts collectElements enumerates up to MAX_ELEMENTS=50 accessibility-role elements (deduped to MAX_PER_TEMPLATE=5 per numbered cluster) and generateFingerprint lets unchanged re-visited pages skip LLM calls (packages/hackbrowser/src/scanner.ts:1-40, agent.ts:2283-2293)
+- **THEN** scanner.ts collectElements enumerates up to MAX_ELEMENTS=50 accessibility-role elements (deduped to MAX_PER_TEMPLATE=5 per numbered cluster) and generateFingerprint lets unchanged re-visited pages skip LLM calls (constants at scanner.ts:12,19; collectElements at scanner.ts:645; generateFingerprint at state.ts:186; wired at agent.ts:2287-2291)
 
 ### Requirement: Capture Enrichment and Ingest Transport
 The system SHALL enrich each captured request with UI-form context, trigger element, and page/role signals, then transmit it to the CyberStrike server over HTTP loopback to /session/ingest.
@@ -149,7 +149,7 @@ The system SHALL gate each tester to a fixed capability allowlist (with an extra
 - `packages/hackbrowser/src/api.ts` — Library entry point runCrawl: validation, chromium preflight, flat CrawlOptions -> nested AgentConfig, error aggregation
 - `packages/hackbrowser/src/capture.ts` — UI-context snapshot (snapshotPageUI), raw HTTP request builder, param<->UI correlation (hiddenParams)
 - `packages/hackbrowser/src/ingest.ts` — Transport to /session/ingest: buildIngestPayload, sendIngest, credential register/PATCH sync, page-diff
-- `packages/hackbrowser/src/scanner.ts` — DOM/accessibility element collection, page fingerprinting, lazy-content reveal/disclosure expansion
+- `packages/hackbrowser/src/scanner.ts` — DOM/accessibility element collection (collectElements), lazy-content reveal/disclosure expansion (page fingerprinting lives in `state.ts` generateFingerprint)
 - `packages/cyberstrike/src/tool/hackbrowser-launcher.ts` — Subprocess launcher: activeRuns guard, Bun.spawn worker, IPC reader (backgroundRun), launch/stop, HackbrowserStatus updates
 - `packages/cyberstrike/src/server/routes/session.ts` — /ingest route (normalize->dedup->observation->enqueue->proxy-agent) and hackbrowser launch/stop/status routes
 - `packages/cyberstrike/src/agent/agent.ts` — Agent registry: proxy-agent, proxy-analyzer, 8 proxy-tester-*, loadVulnAgent + stripDefensiveSections, per-agent permission rulesets, model tiering, step budget

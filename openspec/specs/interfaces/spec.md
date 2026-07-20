@@ -10,11 +10,11 @@ The system SHALL register a yargs CLI named `cyberstrike` exposing the TUI as th
 
 #### Scenario: Default invocation launches TUI
 - **WHEN** the binary is run with no subcommand (matching `$0 [project]`)
-- **THEN** TuiThreadCommand runs, spawning a worker and the opentui TUI (packages/cyberstrike/src/index.ts:117 registers TuiThreadCommand; thread.ts command is `$0 [project]`)
+- **THEN** TuiThreadCommand runs, spawning a worker and the opentui TUI (packages/cyberstrike/src/index.ts:126 registers TuiThreadCommand; thread.ts command is `$0 [project]`)
 
 #### Scenario: Full command set is registered
 - **WHEN** the CLI parses argv
-- **THEN** it registers acp, mcp, attach, hackbrowser, run, generate, debug, auth, agent, upgrade, uninstall, serve, web, models, stats, export, import, github, pr, session, provider, skill plus `completion`/`--help`/`--version` (index.ts:89-113)
+- **THEN** it registers acp, mcp, attach, hackbrowser, run, generate, debug, auth, agent, upgrade, uninstall, serve, web, models, stats, export, import, github, pr, session, provider, skill plus `completion`/`--help`/`--version` (index.ts:123-146)
 
 #### Scenario: First-run DB migration
 - **WHEN** the marker file `<data>/cyberstrike.db` does not yet exist
@@ -33,7 +33,7 @@ The system SHALL provide `cyberstrike run [message..]` that drives a non-interac
 
 #### Scenario: Session selection
 - **WHEN** flags `--continue`/`--session`/`--fork` are given
-- **THEN** it continues the newest root session, a specific id, or forks before continuing, else creates a new session with a deny-`question` permission ruleset (run.ts session()/rules at 366-372)
+- **THEN** it continues the newest root session, a specific id, or forks before continuing, else creates a new session with a deny-`question` permission ruleset (run.ts session() at 381-394, rules at 367-373)
 
 #### Scenario: Non-interactive permission handling
 - **WHEN** a `permission.asked` event arrives during the run loop
@@ -48,7 +48,7 @@ The system SHALL run the TUI as an opentui/SolidJS render tree hosted in the mai
 
 #### Scenario: Worker + RPC transport
 - **WHEN** the TUI starts without explicit `--port`/`--hostname`/`--mdns`
-- **THEN** thread.ts spawns worker.ts, uses `createWorkerFetch` to proxy fetch calls and `createEventSource` to receive forwarded events at url `http://cyberstrike.internal` (thread.ts:19-40,142-160)
+- **THEN** thread.ts spawns worker.ts, uses `createWorkerFetch` to proxy fetch calls and `createEventSource` to receive forwarded events at url `http://cyberstrike.internal` (thread.ts:19-40,161-166)
 
 #### Scenario: Optional HTTP server
 - **WHEN** a port/hostname/mdns is explicitly set
@@ -151,7 +151,7 @@ The system SHALL provide `hackbrowser <target>` (crawl a web app then open the T
 
 #### Scenario: PR checkout
 - **WHEN** `pr <number>` runs
-- **THEN** it fetches and checks out the GitHub PR branch, then runs cyberstrike in it (pr.ts:6-12)
+- **THEN** it fetches and checks out the GitHub PR branch, then runs cyberstrike in it (pr.ts:30,97)
 
 ## Notes
 - Provenance: this is a fork of sst/opencode. run.ts, the TUI (opentui/SolidJS), acp/agent.ts, serve/web, and the Slack package are opencode interface code renamed to CyberStrike (baseUrl `http://cyberstrike.internal`, env `CYBERSTRIKE=1`). Security-specific ADDITIONS are hackbrowser, skill, github, provider, and the report_vulnerability tool rendering in run.ts.

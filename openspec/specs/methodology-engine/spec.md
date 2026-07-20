@@ -10,7 +10,7 @@ The system SHALL model testing as a fixed 13-phase lifecycle (Phase.ALL) with pr
 
 #### Scenario: Fixed 13-phase union
 - **WHEN** the phase model is enumerated
-- **THEN** Phase.Id is a hardcoded 13-member union (scope_analysis, passive_recon, active_recon, technology_profiling, authentication_testing, session_management, authorization_testing, input_validation, business_logic, data_protection, api_security, infrastructure, reporting) and Phase.ALL holds one Definition per id (phase.ts:7-19, 37-178); each Definition carries prerequisites, requiredTags, minDeliverables, relatedVrtCategories, appliesTo scope types, and recommended agents
+- **THEN** Phase.Id is a hardcoded 13-member union (scope_analysis, passive_recon, active_recon, technology_profiling, authentication_testing, session_management, authorization_testing, input_validation, business_logic, data_protection, api_security, infrastructure, reporting) and Phase.ALL holds one Definition per id (phase.ts:7-20, 37-178); each Definition carries prerequisites, requiredTags, minDeliverables, relatedVrtCategories, appliesTo scope types, and recommended agents
 
 #### Scenario: Scope-type detection filters applicable phases
 - **WHEN** computeState runs for a session
@@ -55,11 +55,11 @@ The system SHALL generate methodology violations (ordering, progress, per-asset 
 
 #### Scenario: Four methodology violation gates
 - **WHEN** generateViolations runs inside computeState
-- **THEN** it emits methodology_ordering (blocking) when an in_progress phase still has a blockReason, methodology_progress (warning) when input_validation/authorization_testing/business_logic have deliverables but no recon phase is complete, per_asset_coverage (warning) when an asset's entry count < 30% of the average, and evidence_quality (blocking) when an exploited entry's detail is under 50 chars (methodology.ts:195-267); results replace unresolved rows in ValidationViolationTable
+- **THEN** it defines four gates, but methodology_ordering (blocking, intended to fire when an in_progress phase still has a blockReason) can never emit — a phase reaches in_progress status only when its prerequisites allow it to start, and blockReason is assigned undefined in exactly that case (methodology.ts:55-61, 69), so the line 206 condition is unsatisfiable; the three gates that actually fire are methodology_progress (warning) when input_validation/authorization_testing/business_logic have deliverables but no recon phase is complete, per_asset_coverage (warning) when an asset's entry count < 30% of the average, and evidence_quality (blocking) when an exploited entry's detail is under 50 chars (methodology.ts:195-267); results replace unresolved rows in ValidationViolationTable
 
 #### Scenario: Four coverage red flags
 - **WHEN** detectRedFlags runs inside computeCoverage
-- **THEN** it emits no_evidence (critical) for tested_not_vulnerable checks lacking evidence, bulk_copy_paste (warning) when >=5 checks share identical reasoning text, too_fast (warning) when >=10 completed checks report <5 total HTTP requests, and all_not_applicable (warning) when >60% of checks are not_applicable (intel.ts:432-511)
+- **THEN** it emits no_evidence (critical) for tested_not_vulnerable checks lacking evidence, bulk_copy_paste (warning) when >=5 distinct entries share identical reasoning text, too_fast (warning) when >=10 completed checks report <5 total HTTP requests, and all_not_applicable (warning) when >60% of checks are not_applicable (intel.ts:432-511)
 
 ### Requirement: Vulnerability Chain Detection
 The system SHALL detect eight named multi-finding attack-chain patterns from intel entries and their tested_vulnerable VRT checks, scoring each by confidence, deduplicating, and persisting candidates while preserving prior human/agent status.

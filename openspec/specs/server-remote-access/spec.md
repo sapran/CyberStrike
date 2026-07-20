@@ -14,7 +14,7 @@ The system SHALL mount the CyberStrike control API as a single Hono app whose su
 
 #### Scenario: OpenAPI + ad-hoc endpoints
 - **WHEN** a client GETs /doc, /path, /vcs, /command, /agent, /lsp, /formatter or POSTs /log, /instance/dispose
-- **THEN** each is served by an inline handler on the root app and /doc returns a generated OpenAPI 3.1.1 spec titled "cyberstrike" (server.ts:262-274, 311-471)
+- **THEN** each is served by an inline handler on the root app and /doc returns a generated OpenAPI 3.1.1 spec titled "cyberstrike" (server.ts:262-274 for /doc, 289-514 for /instance/dispose, /path, /vcs, /command, /log, /agent, /lsp and /formatter)
 
 #### Scenario: Directory resolution per request
 - **WHEN** a request carries `directory` query or `x-cyberstrike-directory` header (or neither)
@@ -150,7 +150,7 @@ The system SHALL let the SPA connect to a chosen server -- local via `cyberstrik
 
 #### Scenario: Hub mode connect screen
 - **WHEN** the SPA is loaded from cyberstrike.io or *.cyberstrike.io with no defaultUrl
-- **THEN** isHub is true, the default server URL is blank, and HubGate renders HubConnectScreen offering localhost:4096 or a manual URL+username+password form (app.tsx:130,193-210; hub-connect.tsx:24-42)
+- **THEN** isHub is true, the default server URL is blank, and HubGate renders HubConnectScreen offering localhost:4096 or a manual URL+username+password form (app.tsx:130,193-210; hub-connect.tsx:63 offer button, 80-130 form; connect() handler at hub-connect.tsx:24-42)
 
 #### Scenario: Basic Auth on every request
 - **WHEN** a stored server connection has a password

@@ -97,7 +97,7 @@ The system SHALL consume the ai-sdk fullStream and persist reasoning, text, tool
 - **THEN** remaining non-completed/non-error tool parts are marked error "Tool execution aborted" and the message completion time is set (processor.ts:57,410-428)
 
 ### Requirement: Doom-Loop Detection
-The system SHALL detect repeated identical tool calls and require an explicit doom_loop permission before allowing the fourth identical call.
+The system SHALL detect repeated identical tool calls and require an explicit doom_loop permission when a third identical tool call is attempted.
 
 #### Scenario: Three identical calls trigger permission
 - **WHEN** the last DOOM_LOOP_THRESHOLD (3) parts are the same tool with byte-identical JSON input and non-pending status

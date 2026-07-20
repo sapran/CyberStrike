@@ -146,7 +146,7 @@ The system SHALL back the enterprise share store with an S3 or Cloudflare-R2 obj
 - **THEN** it emits <Meta robots=noindex,nofollow> yet builds an OpenGraph image URL on social-cards.sst.dev embedding the base64 session title (routes/share/[shareID].tsx:182, 197-209)
 
 ### Requirement: Off-Box Exfil Default & Unauthenticated Share Read (Security Posture)
-The system SHALL, by default, transmit shared session content — including full before/after source-file diffs — to the third-party host cybrstk.us, expose share-data reads with no secret behind low-entropy deterministic ids, and collide shares across tenants in a single global id namespace.
+The system SHALL, by default, transmit shared session content — including full before/after source-file diffs — to the third-party host cybrstk.us, expose share-data reads with no secret behind deterministic sessionID-derived ids (an 8-char slice of the session's random base62 tail, not a separate secret token), and collide shares across tenants in a single global id namespace.
 
 #### Scenario: Full source contents leave the box by default
 - **WHEN** any share is created without configuring enterprise.url
@@ -154,20 +154,20 @@ The system SHALL, by default, transmit shared session content — including full
 
 #### Scenario: Reads need no secret
 - **WHEN** anyone issues GET /api/share/:id/data
-- **THEN** the route returns the full compacted session with no secret check — only create/sync/remove verify the secret (api/[...path].ts:92-113 vs 64-91/114-138)
+- **THEN** the route returns the full compacted session with no secret check — only sync/remove verify the secret (create mints a new secret rather than verifying one) (api/[...path].ts:92-113 vs 64-91/114-138)
 
-#### Scenario: Share ids are guessable and derived
-- **WHEN** an attacker knows or brute-forces a sessionID tail
-- **THEN** the share id is a deterministic 8-char slice of the sessionID (base62 tail), not a random token, so the read namespace is enumerable/predictable (core/share.ts:45)
+#### Scenario: Share ids are derived from the sessionID, not an independent secret
+- **WHEN** a share is created for a sessionID
+- **THEN** the share id is a deterministic 8-char slice of the sessionID's random base62 tail (~62^8 ≈ 2.2e14 combinations, so not practically brute-forceable), not a freshly generated secret token — the id is fully determined by the sessionID and stable rather than a rotating capability (core/share.ts:44; identifier.ts:50)
 
 #### Scenario: Cross-tenant id collision
 - **WHEN** two sessions from different installs share the same trailing 8 chars in one global bucket
 - **THEN** the second Share.create throws AlreadyExists (a cross-tenant DoS / namespace clash) because ids are not namespaced per tenant (core/share.ts:48-49)
 
 ## Notes
-- OFF-BOX EXFIL: share host defaults to https://cybrstk.us (share-next.ts:17), an external domain the operator does not own. A created share uploads full source-file diffs (before+after complete file contents, snapshot/index.ts:226-247) plus all messages/parts. For a pentest tool this means target source/artifacts can leave the box to a third party. Mitigations present: set config enterprise.url to self-host, config share:'disabled', or env CYBERSTRIKE_DISABLE_SHARE=1/true.
+- OFF-BOX EXFIL: share host defaults to https://cybrstk.us (share-next.ts:16), an external domain the operator does not own. A created share uploads full source-file diffs (before+after complete file contents, snapshot/index.ts:226-247) plus all messages/parts. For a pentest tool this means target source/artifacts can leave the box to a third party. Mitigations present: set config enterprise.url to self-host, config share:'disabled', or env CYBERSTRIKE_DISABLE_SHARE=1/true.
 - SHARING IS NOT AUTO BY DEFAULT but IS PERMITTED: config.share has no .default() (config.ts:1113), so auto-share only fires when share==='auto' or CYBERSTRIKE_AUTO_SHARE is set (session/index.ts:298); however manual share() works unless share==='disabled'. So the risky default is the destination + unauthenticated read, not silent auto-upload.
-- UNAUTHENTICATED READ + LOW-ENTROPY IDS: GET /api/share/:id/data performs NO secret check (api/[...path].ts:92-113); only sync/remove verify the UUID secret. The share id is a deterministic 8-char tail of the sessionID (core/share.ts:45), not a random token, making the read namespace predictable/enumerable. Anyone with the 8-char id reads the full session.
+- UNAUTHENTICATED READ + DERIVED IDS: GET /api/share/:id/data performs NO secret check (api/[...path].ts:92-113); only sync/remove verify the UUID secret. The share id is a deterministic 8-char tail of the sessionID (core/share.ts:44), not a freshly generated token — but that tail is the session's random base62 suffix (identifier.ts:50), ~62^8 combinations, so it is NOT practically brute-forceable/enumerable. The real exposure is that anyone who obtains the id (e.g. via the share URL) reads the full session with no authentication, and the id is a stable derivation of the sessionID rather than a rotating capability.
 - ENTERPRISE ID COLLISION: ids live in one global (non-tenant-scoped) storage namespace. Two sessions whose ids share the last 8 chars collide; Share.create's get()+AlreadyExists check (core/share.ts:48-49) makes the second create throw, a cross-tenant DoS. Birthday-bound collisions become plausible only at large share counts, but there is zero tenant isolation on the key.
 - BATCHING NUANCE: the '1s debounce' is a fixed leading window, not a trailing debounce — the timer is armed on the first event and NOT reset by later events (share-next.ts:129-135,142). Also queue items are keyed by a fresh ulid() because the wrapper objects {type,data} have no top-level 'id' (share-next.ts:132,139), so repeated part-updates in a window are NOT coalesced — each is uploaded. If no share row exists at flush time the queued data is silently dropped (share-next.ts:146-147).
 - syncOld() (core/share.ts:133-172) writes per-object share_data/* keys and is the format the DELETE path still purges (remove() lists share_data/*), but the live sync() uses the share_event log + compaction model; the two storage layouts coexist.

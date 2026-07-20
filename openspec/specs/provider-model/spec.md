@@ -1,7 +1,7 @@
 # Multi-Provider LLM Layer (Provider / Model Resolution)
 
 ## Purpose
-The provider layer is CyberStrike's model-agnostic LLM abstraction, inherited wholesale from opencode and re-skinned (openspec/project.md:26). It loads the entire models.dev catalog into a normalized in-memory database, detects which providers have credentials (env/auth.json/config/plugin/custom loader), constructs the matching AI-SDK provider — bundling 23 factories and dynamically npm-installing the rest — and resolves free-form `provider/model` strings to concrete language models with per-provider auth quirks (Anthropic OAuth subscription, Bedrock, Copilot, Vertex, GitLab, Cloudflare, and the cyberstrike/zenmux gateways). It exists so the whole pentest agent loop is decoupled from any single model or vendor.
+The provider layer is CyberStrike's model-agnostic LLM abstraction, inherited wholesale from opencode and re-skinned (openspec/project.md §2). It loads the entire models.dev catalog into a normalized in-memory database, detects which providers have credentials (env/auth.json/config/plugin/custom loader), constructs the matching AI-SDK provider — bundling 23 factories and dynamically npm-installing the rest — and resolves free-form `provider/model` strings to concrete language models with per-provider auth quirks (Anthropic OAuth subscription, Bedrock, Copilot, Vertex, GitLab, Cloudflare, and the cyberstrike/zenmux gateways). It exists so the whole pentest agent loop is decoupled from any single model or vendor.
 
 ## Requirements
 
@@ -33,7 +33,7 @@ The system SHALL convert every models.dev provider and model into a normalized d
 
 #### Scenario: parseModel splits on first slash
 - **WHEN** a model string like "amazon-bedrock/anthropic.claude-sonnet-4-5" is parsed
-- **THEN** parseModel splits on the FIRST "/" into providerID + the remainder as modelID (provider.ts:1419-1425), so the provider prefix only disambiguates the same model across vendors; `model:` is optional everywhere and a free string (openspec/project.md:149-154)
+- **THEN** parseModel splits on the FIRST "/" into providerID + the remainder as modelID (provider.ts:1419-1425), so the provider prefix only disambiguates the same model across vendors; `model:` is optional everywhere and a free string (openspec/project.md §4.5)
 
 #### Scenario: GitHub Copilot Enterprise is synthesized
 - **WHEN** the catalog contains a github-copilot provider
@@ -144,8 +144,8 @@ The system SHALL filter models out of the exposed catalog by lifecycle status, c
 ## Notes
 - README '150+ AI providers / 5,300+ models' claim (README.md:40,95,144) is ACCURATE and actually conservative: the live catalog cache (~/.cache/cyberstrike/models.json) contains 167 providers and 5,690 models. These counts are NOT hardcoded in-repo — they are a property of the external models.dev catalog fetched at runtime, so source alone cannot 'prove' them; the cache confirms them. The repo itself only bundles 23 SDK factories (bundled-providers.ts) and 18 CUSTOM_LOADERS (provider.ts:84-572). README.md:97's '23 bundled SDK providers' figure matches exactly.
 - No models-snapshot.ts file is committed anywhere in the repo, so the Data() build-time-snapshot fallback branch (models.ts:127-131) is dead in this checkout — resolution falls through path>cache>fetch. A production build is expected to generate it.
-- Provenance: this whole layer is inherited wholesale from sst/opencode and re-skinned (openspec/project.md:26,44). CyberStrike-specific additions on top of opencode's design: the OPENCODE_ -> CYBERSTRIKE_ env-var prefix rename (flag.ts), the metered 'cyberstrike' SaaS gateway provider with public/zero-cost-model fallback (provider.ts:132-153), and cyberstrike.io Referer/X-Title headers on the gateway providers.
-- The 'cyberstrike' provider is the SaaS control-plane gateway (OpenAuth/Stripe-metered, openspec/project.md:54); with no key it exposes only free (cost.input===0) models via apiKey "public". 'zenmux' is the ZenMux gateway. Neither is a distinct model family — both are OpenAI-compatible routing gateways that just inject attribution headers.
+- Provenance: this whole layer is inherited wholesale from sst/opencode and re-skinned (openspec/project.md §1–§2). CyberStrike-specific additions on top of opencode's design: the OPENCODE_ -> CYBERSTRIKE_ env-var prefix rename (flag.ts), the metered 'cyberstrike' SaaS gateway provider with public/zero-cost-model fallback (provider.ts:132-153), and cyberstrike.io Referer/X-Title headers on the gateway providers.
+- The 'cyberstrike' provider is the SaaS control-plane gateway (OpenAuth/Stripe-metered, openspec/project.md §2); with no key it exposes only free (cost.input===0) models via apiKey "public". 'zenmux' is the ZenMux gateway. Neither is a distinct model family — both are OpenAI-compatible routing gateways that just inject attribution headers.
 - getModelDescriptor (provider.ts:1215-1299) serializes model access (npm/apiKey/authToken/baseURL/headers) so the standalone hackbrowser worker subprocess can reconstruct a LanguageModel without importing the Provider system — reinforcing the model-agnostic, factory-by-api.npm design.
 - Model-agnostic design CONFIRMED: parseModel is a dumb split-on-first-slash (provider.ts:1419-1425), ModelId is a free string, `model:` is optional and inherited everywhere; catalog->Model conversion (fromModelsDevModel) copies capabilities generically with no per-model branching. The only model-name string matching is in soft ranking/selection heuristics (getSmallModel priority, sort()) and a couple of hardcoded removals (gpt-5-chat-latest), not in the core resolution path.
 

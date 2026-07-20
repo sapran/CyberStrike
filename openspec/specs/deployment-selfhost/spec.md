@@ -97,7 +97,7 @@ The system SHALL publish the CLI to npm as a scoped package with per-platform op
 
 #### Scenario: Postinstall resolves the platform binary
 - **WHEN** the npm package is installed
-- **THEN** postinstall.mjs resolves @cyberstrike-io/cyberstrike-<platform>-<arch>, symlinks the binary, and installs the web UI, skills and hackbrowser worker into ~/.local/share/cyberstrike (postinstall.mjs:51-70,268-289)
+- **THEN** postinstall.mjs resolves and verifies the @cyberstrike-io/cyberstrike-<platform>-<arch> binary (the pre-existing wrapper script handles execution — the symlinkBinary helper at 89-97 is never called), and installs the web UI, skills and hackbrowser worker into ~/.local/share/cyberstrike (postinstall.mjs:51-70,268-289)
 
 #### Scenario: curl installer pulls from GitHub Releases
 - **WHEN** a user runs the install script
@@ -135,7 +135,7 @@ The system SHALL sign only the Windows CLI via SignPath in a workflow separate f
 
 #### Scenario: SignPath runner policy
 - **WHEN** a SignPath signing request is evaluated
-- **THEN** only GitHub Actions and a named Blacksmith runner group are allowed (.signpath/policies/cyberstrike/test-signing.yml:1-6)
+- **THEN** only GitHub Actions and a named Blacksmith runner group are allowed (.signpath/policies/cyberstrike/test-signing.yml:1-5)
 
 ### Requirement: Self-Host Paths & Fork Identifiers
 The system SHALL support a minimal backend-less self-host of the web UI and CLI, while the full cloud tier depends on hardcoded organization/domain/repo identifiers that a self-hoster must fork and replace under AGPL open-core terms.
@@ -159,7 +159,7 @@ The system SHALL support a minimal backend-less self-host of the web UI and CLI,
 - Homebrew/Scoop/Chocolatey are consume-only in this repo: the CLI queries and upgrades via them (installation/index.ts) and the README advertises `brew install CyberStrikeus/tap/cyberstrike` / `scoop install cyberstrike`, but there is NO code, workflow, or manifest here that publishes a tap or bucket. The scoop path even points at the community ScoopInstaller/Main bucket (raw.githubusercontent.com/.../bucket/cyberstrike.json) which would not exist for this fork — aspirational/broken unless separately maintained.
 - SignPath signing is not part of the release path. sign-cli.yml only triggers on push to a stale dev branch `brendan/desktop-signpath` (another upstream-author artifact) or manual dispatch, and signs only the Windows exe. publish.yml never calls it, so npm/GitHub-release binaries ship unsigned. Combined with NPM_CONFIG_PROVENANCE=false, the published artifacts carry no signature or provenance attestation despite id-token:write being granted.
 - curl endpoint naming mismatch: README/install advertise https://cyberstrike.io/install.sh, but the CLI self-updater and the file at repo root use `/install` (no .sh). Both presumably served by the cyberstrike.io site; the repo file is named `install`.
-- Build target count is 11 (build.ts allTargets), producing binaries for linux(arm64/x64/x64-baseline/arm64-musl/x64-musl/x64-musl-baseline), darwin(arm64/x64/x64-baseline), win32(x64/x64-baseline). Windows has no arm64 build.
+- Build target count is 11 (build.ts allTargets), producing binaries for linux(arm64/x64/x64-baseline/arm64-musl/x64-musl/x64-baseline-musl), darwin(arm64/x64/x64-baseline), win32(x64/x64-baseline). Windows has no arm64 build.
 - The main binary deliberately excludes playwright (subprocess.md design): hackbrowser runs in a spawned node worker (hackbrowser-worker.js) with playwright resolved at runtime from ~/.local/share/cyberstrike/node_modules, installed by postinstall (pinned 1.58.2, chromium via `npx playwright install` as a separate one-time step).
 - Nix reproducibility relies on a fixed-output node_modules derivation with per-system sha256 in nix/hashes.json; the flake exposes node_modules_updater (fakeHash) to surface the correct hash on build failure, and a nix-hashes workflow presumably updates them.
 - README marketing claims (176+ MCP tools, 13+ agents, compliance frameworks) are product-surface claims not verifiable from the deployment code and were out of scope for this capability; the deployment/infra numbers cited above are all read directly from source.

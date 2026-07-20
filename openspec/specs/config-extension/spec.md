@@ -40,7 +40,7 @@ The system SHALL discover project configuration by walking up from Instance.dire
 - **THEN** both project cyberstrike.json{,c} lookup and project .cyberstrike directory scanning are skipped (config.ts:174,190; flag.ts:72-78)
 
 ### Requirement: Config.directories() Scan Roots
-The system SHALL assemble the set of extension scan roots as: the global XDG config dir, every .cyberstrike directory found walking up from Instance.directory to worktree (unless project config is disabled), the home ~/.cyberstrike, and CYBERSTRIKE_CONFIG_DIR when set; it loads cyberstrike.json{,c} only from roots ending in .cyberstrike (or the explicit CONFIG_DIR), and exposes the de-duplicated list via Config.directories().
+The system SHALL assemble the set of extension scan roots as: the global XDG config dir, every .cyberstrike directory found walking up from Instance.directory to worktree (unless project config is disabled), the home ~/.cyberstrike, and CYBERSTRIKE_CONFIG_DIR when set; it loads cyberstrike.json{,c} only from roots ending in .cyberstrike (or the explicit CONFIG_DIR), and exposes this list (raw, NOT de-duplicated — `unique()` is applied only to the internal config-loading loop at config.ts:217, not to the value stored/returned) via Config.directories() (config.ts:1568-1570).
 
 #### Scenario: dot-cyberstrike json loaded
 - **WHEN** a scan root path ends with '.cyberstrike'
