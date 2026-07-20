@@ -1,0 +1,40 @@
+schema: spec-driven
+
+# Project context shown to AI when creating artifacts.
+context: |
+  CyberStrike is an open-source AI agent for offensive security — a rebrand-fork of
+  sst/opencode (an AI *coding* agent) retargeted to autonomous pentesting. License:
+  AGPL-3.0-only (upstream was MIT). This repo (github.com/sapran/CyberStrike) is a
+  personal fork; integration branch is `develop`, releases merge `develop` -> `main`.
+
+  Stack: Bun + Turbo monorepo, TypeScript (opencode "namespace over lazy Instance.state"
+  style), Hono server, ai-sdk provider layer (150+ providers via models.dev), SolidJS UI,
+  Drizzle/SQLite, SST v3 on Cloudflare. Core engine: packages/cyberstrike (agent loop in
+  src/session/prompt.ts; per-agent tool gating via PermissionNext in src/session/llm.ts).
+
+  Extension model (extend WITHOUT forking):
+  - Skills = Claude-Code drop-in. Loader scans .claude/skills, .agents/skills (home+project)
+    plus .cyberstrike/skill(s). A plain SKILL.md needs only name+description; it loads as
+    "unverified" and works fully. Do NOT run `cyberstrike skill sign` on your own skills —
+    it hardcodes signed_by: cyberstrike-official, so self-signing -> "tampered" -> blocked.
+  - Agents = same markdown format, but scanned from .cyberstrike/agent(s) (NOT .claude/agents).
+    Porting a CC agent needs: convert/drop `tools:` (use `permission:` allow/ask/deny map),
+    drop or qualify `model:` (bare `sonnet` invalid; model is OPTIONAL and inherits session
+    model — provider/model only disambiguates providers), and note `name:` is ignored (filename wins).
+  - Tools/commands/plugins: .cyberstrike/{tool,command,plugin}/. MCP: `mcp` config key
+    (type discriminator; command = full argv; environment not env) — differs from CC .mcp.json.
+  - Methodology engine (src/methodology) is hardcoded TS — custom phases need a fork; prefer
+    a skill + agent prompt for custom playbooks.
+
+  Conventions (opencode house style, see AGENTS.md): single-word names, early returns over
+  else, avoid try/catch, Bun APIs, Drizzle snake_case columns, type inference over annotations.
+  Testing runs from package dirs, never repo root.
+
+  Current work: porting the operator's own Claude Code agents + skills into CyberStrike;
+  testing happens in the ~/cab/cyberstrike playground (own providers: NVIDIA Build API,
+  LiteLLM @ llm.tilearn.net). See openspec/project.md for the full architecture reference.
+
+# Per-artifact rules (optional)
+# rules:
+#   proposal:
+#     - Always include a "Non-goals" section
